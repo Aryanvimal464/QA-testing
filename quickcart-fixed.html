@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>QuickCart — Checkout</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FBF7F0;
+    --panel:#FFFFFF;
+    --border:#E6DFD2;
+    --ink:#2B2620;
+    --ink-soft:#8A8072;
+    --rust:#B5502F;
+    --rust-dark:#8F3E23;
+    --green:#4C6B4F;
+    --radius:12px;
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#1E1A16;
+      --panel:#28221D;
+      --border:#3B342C;
+      --ink:#F3EEE5;
+      --ink-soft:#A69C8D;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#1E1A16;--panel:#28221D;--border:#3B342C;--ink:#F3EEE5;--ink-soft:#A69C8D;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  html{scroll-padding-top:env(safe-area-inset-top,0px);}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font-family:'Source Sans 3', system-ui, sans-serif;
+    display:flex;justify-content:center;padding:36px 16px 60px;
+  }
+  .app{width:100%;max-width:620px;}
+  h1{
+    font-family:'Fraunces', serif;
+    font-size:28px;font-weight:600;margin:0 0 4px;letter-spacing:-0.01em;
+  }
+  .sub{color:var(--ink-soft);font-size:14px;margin-bottom:26px;}
+  .panel{
+    background:var(--panel);border:1px solid var(--border);
+    border-radius:var(--radius);padding:6px;margin-bottom:16px;
+    overflow:hidden;
+  }
+  .item{
+    display:flex;align-items:center;gap:14px;
+    padding:14px 12px;border-bottom:1px solid var(--border);
+  }
+  .item:last-child{border-bottom:none;}
+  .swatch{
+    width:44px;height:44px;border-radius:8px;flex:0 0 auto;
+  }
+  .item .info{flex:1;min-width:0;}
+  .item .name{font-size:15px;font-weight:600;}
+  .item .price{font-size:13px;color:var(--ink-soft);margin-top:2px;}
+  .qty{
+    display:flex;align-items:center;gap:8px;
+    border:1px solid var(--border);border-radius:8px;padding:4px 6px;
+  }
+  .qty button{
+    width:24px;height:24px;border:none;background:var(--bg);
+    border-radius:6px;font-size:15px;cursor:pointer;color:var(--ink);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .qty span{font-size:14px;min-width:18px;text-align:center;font-variant-numeric:tabular-nums;}
+  .subtotal{
+    width:66px;text-align:right;font-size:14px;font-weight:600;
+    font-variant-numeric:tabular-nums;
+  }
+  .remove{
+    background:none;border:none;color:var(--ink-soft);font-size:18px;
+    cursor:pointer;padding:4px 6px;
+  }
+  .remove:hover{color:var(--rust);}
+  .coupon-row{
+    display:flex;gap:8px;margin-bottom:16px;
+  }
+  #couponInput{
+    flex:1;font-family:inherit;font-size:14px;padding:11px 13px;
+    border:1px solid var(--border);border-radius:8px;background:var(--panel);color:var(--ink);
+  }
+  button.action{
+    font-family:inherit;font-weight:600;font-size:14px;
+    border-radius:8px;border:1px solid var(--border);
+    padding:11px 18px;background:var(--panel);color:var(--ink);cursor:pointer;
+  }
+  button.action:hover{background:var(--bg);}
+  .coupon-msg{font-size:12.5px;color:var(--green);margin:-8px 0 16px;min-height:16px;}
+  .summary{
+    background:var(--panel);border:1px solid var(--border);
+    border-radius:var(--radius);padding:16px 18px;
+  }
+  .row{
+    display:flex;justify-content:space-between;font-size:14px;
+    padding:6px 0;color:var(--ink-soft);
+  }
+  .row.total{
+    color:var(--ink);font-weight:600;font-size:17px;
+    border-top:1px solid var(--border);margin-top:6px;padding-top:12px;
+  }
+  .checkout-btn{
+    width:100%;margin-top:16px;background:var(--rust);color:#fff;
+    border:none;border-radius:8px;padding:13px;font-size:15px;font-weight:600;
+    font-family:inherit;cursor:pointer;
+  }
+  .checkout-btn:hover{background:var(--rust-dark);}
+  .clear-row{text-align:center;margin-top:14px;}
+  .clear-row button{
+    background:none;border:none;color:var(--ink-soft);font-size:13px;
+    text-decoration:underline;cursor:pointer;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>Your cart</h1>
+  <div class="sub" id="stockNote">3 items · limited stock on some</div>
+
+  <div class="panel" id="cartPanel"></div>
+
+  <div class="coupon-row">
+    <input type="text" id="couponInput" placeholder="Coupon code">
+    <button class="action" id="applyCouponBtn">Apply</button>
+  </div>
+  <div class="coupon-msg" id="couponMsg"></div>
+
+  <div class="summary">
+    <div class="row"><span>Subtotal</span><span id="sumSubtotal">$0.00</span></div>
+    <div class="row"><span>Discount</span><span id="sumDiscount">−$0.00</span></div>
+    <div class="row"><span>Tax (8%)</span><span id="sumTax">$0.00</span></div>
+    <div class="row total"><span>Total</span><span id="sumTotal">$0.00</span></div>
+    <button class="checkout-btn">Checkout</button>
+  </div>
+
+  <div class="clear-row"><button id="clearCartBtn">Clear cart</button></div>
+</div>
+
+<script>
+let items = [
+  { id: 1, name: "Ceramic pour-over dripper", price: 28, qty: 1, stock: 4, color: "#B5502F" },
+  { id: 2, name: "Bag of single-origin beans", price: 16.5, qty: 2, stock: 6, color: "#4C6B4F" },
+  { id: 3, name: "Wooden stirring paddle", price: 9, qty: 1, stock: 2, color: "#8A8072" }
+];
+let discountPercent = 0;
+
+const cartPanel = document.getElementById('cartPanel');
+const couponInput = document.getElementById('couponInput');
+const couponMsg = document.getElementById('couponMsg');
+const sumSubtotal = document.getElementById('sumSubtotal');
+const sumDiscount = document.getElementById('sumDiscount');
+const sumTax = document.getElementById('sumTax');
+const sumTotal = document.getElementById('sumTotal');
+
+function render() {
+  cartPanel.innerHTML = '';
+  items.forEach((item) => {
+    const row = document.createElement('div');
+    row.className = 'item';
+    row.innerHTML = `
+      <div class="swatch" style="background:${item.color}"></div>
+      <div class="info">
+        <div class="name">${item.name}</div>
+        <div class="price">$${item.price.toFixed(2)} each · ${item.stock} in stock</div>
+      </div>
+      <div class="qty">
+        <button class="dec">−</button>
+        <span>${item.qty}</span>
+        <button class="inc">+</button>
+      </div>
+      <div class="subtotal">$${(item.price * item.qty).toFixed(2)}</div>
+      <button class="remove">×</button>
+    `;
+
+    row.querySelector('.inc').addEventListener('click', () => {
+      if (item.qty >= item.stock) return;
+      item.qty++;
+      updateRow(row, item);
+    });
+    row.querySelector('.dec').addEventListener('click', () => {
+      if (item.qty <= 0) return;
+      item.qty--;
+      updateRow(row, item);
+    });
+    row.querySelector('.remove').addEventListener('click', () => {
+      items = items.filter(i => i.id !== item.id);
+      render();
+    });
+
+    cartPanel.appendChild(row);
+  });
+
+  updateSummary();
+}
+
+function updateRow(row, item) {
+  row.querySelector('.qty span').textContent = item.qty;
+  row.querySelector('.subtotal').textContent = `$${(item.price * item.qty).toFixed(2)}`;
+  updateSummary();
+}
+
+function updateSummary() {
+  const subtotal = items.reduce((sum, i) => sum + i.price * i.qty, 0);
+  const discount = subtotal * (discountPercent / 100);
+  const taxable = subtotal - discount;
+  const tax = taxable * 0.08;
+  const total = taxable + tax;
+
+  sumSubtotal.textContent = `$${subtotal.toFixed(2)}`;
+  sumDiscount.textContent = `−$${discount.toFixed(2)}`;
+  sumTax.textContent = `$${tax.toFixed(2)}`;
+  sumTotal.textContent = `$${total.toFixed(2)}`;
+}
+
+let couponApplied = false;
+
+document.getElementById('applyCouponBtn').addEventListener('click', () => {
+  const code = couponInput.value.trim().toUpperCase();
+  if (couponApplied) {
+    couponMsg.textContent = 'Coupon already applied to this order';
+    return;
+  }
+  if (code === 'SAVE10') {
+    discountPercent += 10;
+    couponApplied = true;
+    couponMsg.textContent = 'Coupon applied — 10% off';
+    updateSummary();
+  } else {
+    couponMsg.textContent = 'That coupon code is not valid';
+  }
+});
+
+document.getElementById('clearCartBtn').addEventListener('click', () => {
+  items = [];
+  render();
+});
+
+render();
+</script>
+</body>
+</html>
